@@ -5,37 +5,37 @@
    ========================================================================== */
 
 :root {
-  --bg-page: #f2f2f5;
-  --text-on-light: #111111;
+  --bg-page: #000000;
+  --text-on-light: #ffffff;
   --text-on-dark: #ffffff;
   --text-muted: #88888e;
   --text-dim: #55555c;
   
-  --module-bg: #0d0d10;
-  --module-inner-bg: #000000;
-  --module-border: #1e1e24;
-  --module-border-strong: #33333c;
+  --module-bg: #0c0c0e;
+  --module-inner-bg: #141418;
+  --module-border: rgba(255, 255, 255, 0.12);
+  --module-border-strong: rgba(255, 255, 255, 0.25);
   
   --angel-bg: #ffffff;
   --angel-text: #000000;
-  --angel-border: #000000;
+  --angel-border: #ffffff;
   
-  --demon-bg: #000000;
+  --demon-bg: #050507;
   --demon-text: #ffffff;
-  --demon-border: #000000;
+  --demon-border: rgba(255, 255, 255, 0.3);
   
-  --judge-bg: #18181d;
+  --judge-bg: #111116;
   --judge-text: #f0f0f4;
   
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --radius-pill: 999px;
   
   --font-mono: 'SF Mono', 'JetBrains Mono', 'Roboto Mono', Consolas, monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
   --transition-fast: 0.18s ease;
-  --shadow-module: 0 4px 18px rgba(0, 0, 0, 0.08);
+  --shadow-module: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 *, *::before, *::after {
@@ -225,7 +225,8 @@ textarea#dilemma-input::placeholder {
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-bottom: 2px;
+  padding: 2px 14px 4px 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 .skin-pills::-webkit-scrollbar {
