@@ -374,13 +374,58 @@ el.shopModal.addEventListener('click', (e) => {
 
 // Обработка клика по покупке за Telegram Stars
 el.shopModal.querySelectorAll('.buy-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     triggerHaptic('medium');
     const item = btn.dataset.item;
-    if (tg?.showAlert) {
-      tg.showAlert('Оплата через Telegram Stars находится в режиме настройки бота!');
-    } else {
-      alert('Оплата через Telegram Stars находится в режиме настройки бота!');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/create-invoice', {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({ item })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Не удалось сформировать счет на оплату');
+      }
+
+      const data = await res.json();
+      if (!data.invoice_link) {
+        throw new Error('Ссылка на счет не получена');
+      }
+
+      // Открываем нативное окно оплаты Telegram Stars
+      if (tg?.openInvoice) {
+        tg.openInvoice(data.invoice_link, (status) => {
+          if (status === 'paid') {
+            triggerHaptic('success');
+            if (tg?.showAlert) {
+              tg.showAlert('Оплата прошла успешно! Баланс обновлен.');
+            }
+            loadProfile();
+            closeShopModal();
+          } else if (status === 'failed') {
+            triggerHaptic('error');
+            if (tg?.showAlert) {
+              tg.showAlert('Оплата не была завершена.');
+            }
+          }
+        });
+      } else {
+        window.open(data.invoice_link, '_blank');
+      }
+    } catch (err) {
+      triggerHaptic('error');
+      console.error('Ошибка создания инвойса:', err);
+      if (tg?.showAlert) {
+        tg.showAlert(err.message || 'Ошибка при открытии счета');
+      } else {
+        alert(err.message || 'Ошибка при открытии счета');
+      }
+    } finally {
+      btn.disabled = false;
     }
   });
 });

@@ -4,8 +4,12 @@ from pydantic import BaseModel, Field
 from app.api.security import get_current_user_id
 from app.database.db import get_db
 from app.database.queries import choose_side, get_or_create_user, get_user_history, save_dilemma, spend_judge_sphere
+from aiogram.types import LabeledPrice
+from app.config import settings
+from app.services.bot import bot
 from app.services.llm import generate_duality, generate_response
 from app.services.prompts import JUDGE_SYSTEM, format_judge_input, get_skin_prompts
+
 router = APIRouter(prefix="/api", tags=["API"])
 
 class DilemmaRequest(BaseModel):
@@ -68,6 +72,61 @@ async def make_choice(
 ):
     karma = await choose_side(db, req.dilemma_id, user_id, req.side)
     return {"karma": karma}
+
+
+class InvoiceRequest(BaseModel):
+    item: str = Field(..., pattern="^(pack_spheres|skin_gopnik|skin_office)$")
+
+
+@router.post("/create-invoice")
+async def create_invoice(
+    req: InvoiceRequest,
+    user_id: int = Depends(get_current_user_id),
+):
+    if not bot:
+        raise HTTPException(
+            status_code=500, detail="Telegram бот не настроен"
+        )
+
+    ITEMS_CONFIG = {
+        "pack_spheres": {
+            "title": "Пак сфер Судьи (3 шт.)",
+            "description": "3 сферы для глубокого философского разбора дилемм",
+            "amount": settings.PRICE_JUDGE_PACK_3,
+        },
+        "skin_office": {
+            "title": "Скин «Офисный душнила»",
+            "description": "Разбор дилемм через KPI, ROI и корпоративные интриги",
+            "amount": settings.PRICE_SKIN_OFFICE,
+        },
+        "skin_gopnik": {
+            "title": "Скин «Гопник»",
+            "description": "Пояснит на кортах по понятиям и без соплей",
+            "amount": settings.PRICE_SKIN_GOPNIK,
+        },
+    }
+
+    item_info = ITEMS_CONFIG[req.item]
+    try:
+        invoice_link = await bot.create_invoice_link(
+            title=item_info["title"],
+            description=item_info["description"],
+            payload=f"{req.item}:{user_id}",
+            provider_token="",  # Для Telegram Stars provider_token всегда пустой
+            currency="XTR",  # Код валюты Telegram Stars
+            prices=[
+                LabeledPrice(
+                    label=item_info["title"], amount=item_info["amount"]
+                )
+            ],
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Ошибка генерации счёта: {str(e)}"
+        )
+
+    return {"invoice_link": invoice_link}
+
 
 
    
