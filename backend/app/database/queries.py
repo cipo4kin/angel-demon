@@ -1,0 +1,145 @@
+import json
+import aiosqlite
+
+async def get_or_create_user(db: aiosqlite.Connection, telegram_id: int) -> dict:
+    """Получает профиль пользователя или регает нового
+    """
+    cursor = await db.execute(
+        "SELECT * FROM users WHERE telegram_id = ?;",
+        (telegram_id,)
+    )
+    user = await cursor.fetchone()
+    if not user:
+        await db.execute(
+            "INSERT INTO users (telegram_id) VALUES (?);",
+            (telegram_id,)
+        )
+        await db.commit()
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE telegram_id = ?;",
+            (telegram_id,)
+        )
+        user = await cursor.fetchone()
+
+    user_dict = dict(user)
+    user_dict["unlocked_skins"] = json.loads(user_dict["unlocked_skins"])
+    return user_dict
+async def save_dilemma(
+        db: aiosqlite.Connection,
+        user_id: int,
+        text: str,
+        skin: str,
+        angel_answer: str,
+        demon_answer: str,
+) -> int:
+    """Сохраняет новую дилемму и возвращает ее айди"""
+    cursor = await db.execute(
+        """
+INSERT INTO dilemmas (user_id, text, skin, angel_answer, demon_answer)
+VALUES (?,?,?,?,?);""",
+(user_id, text, skin, angel_answer, demon_answer),
+    )
+    await db.commit()
+    return cursor.lastrowid
+async def choose_side(
+    db: aiosqlite.Connection,
+    dilemma_id: int,
+    user_id: int,
+    side: str,
+) -> dict:
+    """Записывает выбор стороны и сдвигает карму пользователя"""
+    await db.execute(
+        "UPDATE dilemmas SET chosen_side = ? WHERE id = ? AND user_id = ?;",
+        (side, dilemma_id, user_id),
+    )
+    if side == "angel":
+        await db.execute(
+            "UPDATE users SET karma_angel = karma_angel + 1 WHERE telegram_id = ?;",
+            (user_id,),
+
+        )
+    elif side == "demon":
+        await db.execute(
+            "UPDATE users SET karma_demon = karma_demon + 1 WHERE telegram_id = ?;",
+            (user_id,),
+        )
+    await db.commit()
+
+    cursor = await db.execute(
+        "SELECT karma_angel, karma_demon FROM users WHERE telegram_id = ?;",
+        (user_id,),
+    )
+    row = await cursor.fetchone()
+    return dict(row)
+async def get_user_history(
+        db: aiosqlite.Connection,
+        user_id: int,
+        limit: int = 15,
+) -> list[dict]:
+    """Возвращает историю последних дилемм пользователя для аккордеона"""
+    cursor = await db.execute(
+        """
+SELECT id, text, skin, angel_answer, demon_answer, chosen_side, created_at FROM dilemmas
+WHERE user_id = ?
+ORDER BY id DESC
+LIMIT ?;""",
+(user_id, limit),
+    )
+    rows = await cursor.fetchall()
+    return [dict(row) for row in rows]
+async def spend_judge_sphere(
+        db: aiosqlite.Connection,
+        user_id: int 
+) -> bool:
+    cursor = await db.execute(
+        "SELECT judge_spheres FROM users WHERE telegram_id = ?;",
+        (user_id,),
+    )
+    row = await cursor.fetchone()
+    if not row or row["judge_spheres"] < 1:
+        return False
+    await db.execute(
+        "UPDATE users SET judge_spheres = judge_spheres - 1 WHERE telegram_id = ?;",
+        (user_id,),
+    )
+    await db.commit()
+    return True
+async def add_judge_spheres(
+        db: aiosqlite.Connection,
+        user_id: int,
+        count: int,
+) -> int:
+    await db.execute(
+        "UPDATE users SET judge_spheres = judge_spheres + ? WHERE telegram_id = ?;",
+        (count, user_id,),
+    )
+    await db.commit()
+
+    cursor = await db.execute(
+        "SELECT judge_spheres FROM users WHERE telegram_id = ?;",
+        (user_id,),
+    )
+    await db.commit()
+    row = await cursor.fetchone()
+    return row["judge_spheres"]
+async def unlock_skin(
+        db: aiosqlite.Connection,
+        user_id: int,
+        skin_name: str,
+) -> list[str]:
+    cursor = await db.execute(
+        "SELECT unlocked_skins FROM users WHERE telegram_id = ?;",
+        (user_id,),
+    )
+    row = await cursor.fetchone()
+    skins = json.loads(row["unlocked_skins"]) if row else ["classic"]
+
+    if skin_name not in skins:
+        skins.append(skin_name)
+        await db.execute(
+            "UPDATE users SET unlocked_skins = ? WHERE telegram_id = ?;",
+            (json.dumps(skins), user_id),
+        )
+        await db.commit()
+    return skins
+

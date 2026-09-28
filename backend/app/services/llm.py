@@ -1,6 +1,5 @@
 import asyncio
 import time
-import groq
 from groq import AsyncGroq
 from app.config import settings
 

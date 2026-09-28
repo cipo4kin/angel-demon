@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     BOT_TOKEN: str = ""
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "qwen/qwen3.8-27b"
+    DB_PATH: Path = Path(__file__).resolve().parent / "database" / "angel_demon.db"
 
 
 settings = Settings()
