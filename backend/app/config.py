@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "qwen/qwen3.8-27b"
     DB_PATH: Path = Path(__file__).resolve().parent / "database" / "angel_demon.db"
+    FRONTEND_DIR: Path = Path(__file__).resolve().parent.parent.parent / "frontend"
+    WEBAPP_URL: str = ""
+    PRICE_SKIN_GOPNIK: int = 50
+    PRICE_SKIN_OFFICE: int = 50
+    PRICE_JUDGE_PACK_3: int = 25
 
 
 settings = Settings()

@@ -26,30 +26,15 @@ async def generate_response(
     elapsed = time.perf_counter() - start_time
     content = response.choices[0].message.content or ""
     return content.strip(), elapsed
-async def main():
-    print(f"Модель: {settings.GROQ_MODEL}")
-    print("Рассуждаем дилемму одновременно: Ангел и Демон...\n")
-
-    dilemma = "Стоит ли брать кредит на новый айфон?"
-
-    angel_prompt = (
-        "Ты мудрый, добрый ангел-хранитель. Ответь конструктивно, тепло и разумно в 1-2 предложениях на русском."
-    )
-    demon_prompt = (
-        "Ты циничный, язвительный демон-искуситель. Ответь с черным юмором и сарказмом в 1-2 предложениях на русском."
-    )
-
-    start_total = time.perf_counter()
-    
+async def generate_duality(
+        angel_system_prompt: str,
+        demon_system_prompt: str,
+        dilemma_text: str,
+) -> tuple[str, str, float]:
+    start_time = time.perf_counter()
     (angel_text, _), (demon_text, _) = await asyncio.gather(
-        generate_response(angel_prompt, dilemma),
-        generate_response(demon_prompt, dilemma),
+        generate_response(angel_system_prompt, dilemma_text),
+        generate_response(demon_system_prompt, dilemma_text)
     )
-    total_time = time.perf_counter() - start_total
-
-    print(f"🕊 АНГЕЛ:\n{angel_text}\n")
-    print(f"🔥 ДЕМОН:\n{demon_text}\n")
-    print(f"Общее время параллельной генерации: {total_time:.2f} сек\n")
-
-
-asyncio.run(main())
+    total_elapsed = time.perf_counter() - start_time
+    return angel_text, demon_text, total_elapsed
