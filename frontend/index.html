@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ангел и Демон</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- 1. ВЕРХ ЭКРАНА: Карма и сферы Судьи -->
+    <header class="header">
+      <div class="karma-section">
+        <div class="karma-labels">
+          <span class="karma-label angel-label">😇 <span id="angel-percent">50%</span></span>
+          <span class="karma-title">ДУАЛЬНОСТЬ КАРМЫ</span>
+          <span class="karma-label demon-label"><span id="demon-percent">50%</span> 😈</span>
+        </div>
+        <div class="karma-bar-track">
+          <div id="karma-bar-fill" class="karma-bar-fill" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <div class="spheres-badge" id="spheres-badge">
+        <span class="sphere-icon">🔮</span>
+        <span class="sphere-text"><span id="spheres-count">1</span> шт.</span>
+      </div>
+    </header>
+
+    <!-- 2. ЦЕНТР: Поле ввода и настройки дилеммы -->
+    <main class="main-content">
+      <div class="input-card">
+        <label for="dilemma-input" class="section-label">ТВОЯ ДИЛЕММА</label>
+        <textarea 
+          id="dilemma-input" 
+          rows="3" 
+          placeholder="Опиши дилемму: «Стоит ли брать кредит на айфон?..»" 
+          maxlength="500"
+        ></textarea>
+        
+        <div class="skin-selector-container">
+          <span class="section-label">ЛИЧНОСТИ:</span>
+          <div class="skin-pills" id="skin-pills">
+            <button type="button" class="skin-pill active" data-skin="classic">
+              🔘 Классика
+            </button>
+            <button type="button" class="skin-pill locked" data-skin="office">
+              Офис 🔒 50⭐️
+            </button>
+            <button type="button" class="skin-pill locked" data-skin="gopnik">
+              Гопник 🔒 50⭐️
+            </button>
+          </div>
+        </div>
+
+        <div class="judge-toggle-container">
+          <label class="judge-checkbox-label">
+            <input type="checkbox" id="judge-toggle">
+            <span class="custom-checkbox"></span>
+            <span class="judge-toggle-text">🔮 Включить вердикт Судьи (тратит 1 сферу)</span>
+          </label>
+        </div>
+
+        <button type="button" id="submit-btn" class="action-btn">
+          ⚡️ РАССУДИТЬ
+        </button>
+      </div>
+
+      <!-- Лоадер при генерации -->
+      <div id="loader" class="loader-container hidden">
+        <div class="pulse-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <p class="loader-text">СУЩНОСТИ ВСТУПАЮТ В СПОР...</p>
+      </div>
+
+      <!-- 3. КАРТОЧКИ ОТВЕТОВ -->
+      <section id="results-section" class="results-section hidden">
+        
+        <!-- Карточка Ангела (Свет: белый фон, черный текст) -->
+        <article class="card card-angel">
+          <div class="card-header">
+            <span class="badge badge-angel">🕊 АНГЕЛ</span>
+          </div>
+          <p id="angel-text" class="card-content"></p>
+          <button type="button" id="choose-angel-btn" class="choose-btn choose-angel">
+            🕊 Послушать Ангела
+          </button>
+        </article>
+
+        <!-- Карточка Демона (Тьма: черный фон, белая окантовка) -->
+        <article class="card card-demon">
+          <div class="card-header">
+            <span class="badge badge-demon">🔥 ДЕМОН</span>
+          </div>
+          <p id="demon-text" class="card-content"></p>
+          <button type="button" id="choose-demon-btn" class="choose-btn choose-demon">
+            🔥 Сделать как Демон
+          </button>
+        </article>
+
+        <!-- Карточка Судьи (Появляется, если заказан вердикт) -->
+        <article id="judge-card" class="card card-judge hidden">
+          <div class="card-header">
+            <span class="badge badge-judge">🔮 ВЕРДИКТ СУДЬИ</span>
+          </div>
+          <p id="judge-text" class="card-content"></p>
+        </article>
+      </section>
+
+      <!-- 4. НИЗ ЭКРАНА: Аккордеон с историей -->
+      <section class="history-section">
+        <details class="history-details" id="history-details">
+          <summary class="history-summary">
+            <span>📜 ИСТОРИЯ ДИЛЕММ</span>
+            <span class="summary-arrow">▼</span>
+          </summary>
+          <div id="history-list" class="history-list">
+            <p class="history-empty">Дилемм пока нет. Задай свой первый вопрос!</p>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <!-- 5. МОДАЛЬНАЯ ШТОРКА МАГАЗИНА (Telegram Stars) -->
+    <div id="shop-modal" class="modal-backdrop hidden">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <h3>МАГАЗИН СУДЕЙСТВА</h3>
+          <button type="button" id="close-shop-btn" class="modal-close">&times;</button>
+        </div>
+        <p class="modal-desc">Оплата происходит через Telegram Stars в один клик.</p>
+        
+        <div class="shop-items">
+          <div class="shop-item">
+            <div class="shop-info">
+              <span class="shop-title">🧢 Скин «Гопник»</span>
+              <span class="shop-subtitle">Пояснит на кортах по понятиям и без соплей</span>
+            </div>
+            <button class="buy-btn" data-item="skin_gopnik">50 ⭐️</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="shop-info">
+              <span class="shop-title">👔 Скин «Офисный душнила»</span>
+              <span class="shop-subtitle">KPI, комплаенс, ROI и корпоративные интриги</span>
+            </div>
+            <button class="buy-btn" data-item="skin_office">50 ⭐️</button>
+          </div>
+
+          <div class="shop-item">
+            <div class="shop-info">
+              <span class="shop-title">🔮 Пак сфер Судьи (3 шт.)</span>
+              <span class="shop-subtitle">Для глубокого философского разбора дилемм</span>
+            </div>
+            <button class="buy-btn" data-item="pack_spheres">25 ⭐️</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/script.js"></script>
+</body>
+</html>
