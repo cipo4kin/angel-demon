@@ -6,36 +6,37 @@
 
 :root {
   --bg-page: #000000;
-  --text-on-light: #ffffff;
-  --text-on-dark: #ffffff;
-  --text-muted: #88888e;
-  --text-dim: #55555c;
+  --text-on-light: #f4f4f6;
+  --text-on-dark: #f4f4f6;
+  --text-muted: #888891;
+  --text-dim: #52525b;
   
   --module-bg: #0c0c0e;
   --module-inner-bg: #141418;
   --module-border: rgba(255, 255, 255, 0.12);
-  --module-border-strong: rgba(255, 255, 255, 0.25);
+  --module-border-strong: rgba(255, 255, 255, 0.22);
   
-  --angel-bg: #ffffff;
-  --angel-text: #000000;
-  --angel-border: #ffffff;
+  --angel-bg: #121216;
+  --angel-text: #f4f4f6;
+  --angel-border: rgba(255, 255, 255, 0.24);
   
-  --demon-bg: #050507;
-  --demon-text: #ffffff;
-  --demon-border: rgba(255, 255, 255, 0.3);
+  --demon-bg: #09090b;
+  --demon-text: #f4f4f6;
+  --demon-border: rgba(255, 255, 255, 0.12);
   
-  --judge-bg: #111116;
-  --judge-text: #f0f0f4;
+  --judge-bg: #110f18;
+  --judge-text: #f4f4f6;
   
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-pill: 999px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-pill: 8px;
   
   --font-mono: 'SF Mono', 'JetBrains Mono', 'Roboto Mono', Consolas, monospace;
   --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
-  --transition-fast: 0.18s ease;
-  --shadow-module: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --transition-fast: 0.16s ease;
+  --shadow-module: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 *, *::before, *::after {
@@ -322,22 +323,23 @@ textarea#dilemma-input::placeholder {
   color: #000000;
   border: none;
   border-radius: var(--radius-md);
-  padding: 14px 20px;
-  font-size: 0.95rem;
-  font-weight: 800;
+  padding: 12px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
   font-family: var(--font-mono);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
   transition: transform var(--transition-fast), background-color var(--transition-fast), opacity var(--transition-fast);
 }
 
 .action-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
   background: #e4e4e7;
 }
 
@@ -346,16 +348,14 @@ textarea#dilemma-input::placeholder {
   cursor: not-allowed;
 }
 
-/* --------------------------------------------------------------------------
-   3. ЛОАДЕР (PULSE DOTS НА СВЕТЛОМ ФОНЕ)
-   -------------------------------------------------------------------------- */
+/* Лоадер */
 .loader-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 28px 16px;
+  padding: 24px 16px;
 }
 
 .pulse-dots {
@@ -364,9 +364,9 @@ textarea#dilemma-input::placeholder {
 }
 
 .pulse-dots span {
-  width: 9px;
-  height: 9px;
-  background-color: #000000;
+  width: 8px;
+  height: 8px;
+  background-color: #ffffff;
   border-radius: 50%;
   animation: pulse 1.2s infinite ease-in-out both;
 }
@@ -410,10 +410,11 @@ textarea#dilemma-input::placeholder {
 
 .card {
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  box-shadow: var(--shadow-module);
 }
 
 .card-header {
@@ -423,48 +424,50 @@ textarea#dilemma-input::placeholder {
 }
 
 .badge {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-family: var(--font-mono);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
   text-transform: uppercase;
 }
 
 .card-content {
-  font-size: 0.94rem;
-  line-height: 1.6;
+  font-size: 0.90rem;
+  line-height: 1.55;
   white-space: pre-wrap;
   word-break: break-word;
+  color: #ececef;
 }
 
-/* Карточка Ангела: Чисто белая с четким черным контуром 2px */
+/* Карточка Ангела: Благородный темный графит со светлым акцентом */
 .card-angel {
   background-color: var(--angel-bg);
   color: var(--angel-text);
-  border: 2px solid var(--angel-border);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--angel-border);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.03);
 }
 
 .badge-angel {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 800;
 }
 
 .choose-btn {
   border-radius: var(--radius-md);
-  padding: 12px 16px;
-  font-size: 0.85rem;
+  padding: 10px 14px;
+  font-size: 0.82rem;
   font-weight: 700;
   font-family: var(--font-sans);
   cursor: pointer;
-  border: none;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  border: 1px solid transparent;
+  transition: transform var(--transition-fast), opacity var(--transition-fast), background-color var(--transition-fast);
 }
 
 .choose-btn:active {
-  transform: scale(0.97);
+  transform: scale(0.98);
 }
 
 .choose-btn:disabled {
@@ -473,48 +476,50 @@ textarea#dilemma-input::placeholder {
 }
 
 .choose-angel {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
 }
 
 .choose-angel:hover {
-  background-color: #222226;
+  background-color: #e4e4e7;
 }
 
-/* Карточка Демона: Монолитный черный кирпич */
+/* Карточка Демона: Угольный монолит */
 .card-demon {
   background-color: var(--demon-bg);
   color: var(--demon-text);
-  border: 2px solid var(--demon-border);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--demon-border);
 }
 
 .badge-demon {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #181515;
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }
 
 .choose-demon {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: #18181b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .choose-demon:hover {
-  background-color: #e4e4e7;
+  background-color: #27272a;
 }
 
 /* Карточка Судьи: Индустриальный графитовый блок */
 .card-judge {
   background-color: var(--judge-bg);
   color: var(--judge-text);
-  border: 2px dashed rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 1px dashed rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .badge-judge {
-  background-color: #2c2c36;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #d8b4fe;
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 /* --------------------------------------------------------------------------
