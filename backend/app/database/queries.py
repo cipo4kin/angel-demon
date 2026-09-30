@@ -2,8 +2,6 @@ import json
 import aiosqlite
 
 async def get_or_create_user(db: aiosqlite.Connection, telegram_id: int) -> dict:
-    """Получает профиль пользователя или регает нового
-    """
     cursor = await db.execute(
         "SELECT * FROM users WHERE telegram_id = ?;",
         (telegram_id,)
@@ -32,7 +30,6 @@ async def save_dilemma(
         angel_answer: str,
         demon_answer: str,
 ) -> int:
-    """Сохраняет новую дилемму и возвращает ее айди"""
     cursor = await db.execute(
         """
 INSERT INTO dilemmas (user_id, text, skin, angel_answer, demon_answer)
@@ -47,7 +44,6 @@ async def choose_side(
     user_id: int,
     side: str,
 ) -> dict:
-    """Записывает выбор стороны и сдвигает карму пользователя"""
     await db.execute(
         "UPDATE dilemmas SET chosen_side = ? WHERE id = ? AND user_id = ?;",
         (side, dilemma_id, user_id),
@@ -76,7 +72,6 @@ async def get_user_history(
         user_id: int,
         limit: int = 15,
 ) -> list[dict]:
-    """Возвращает историю последних дилемм пользователя для аккордеона"""
     cursor = await db.execute(
         """
 SELECT id, text, skin, angel_answer, demon_answer, chosen_side, created_at FROM dilemmas

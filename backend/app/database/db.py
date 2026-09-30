@@ -4,7 +4,6 @@ import aiosqlite
 from app.config import settings
 
 async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
-    """Асинхронный генератор для получения к базе"""
     db = await aiosqlite.connect(settings.DB_PATH)
     db.row_factory = aiosqlite.Row
     try:
@@ -13,7 +12,6 @@ async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:
         await db.close()
 
 async def init_db() -> None:
-    """Создает таблицу пользователей и дилемм при первом запуске"""
     settings.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(settings.DB_PATH) as db:

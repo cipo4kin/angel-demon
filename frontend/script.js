@@ -1,7 +1,4 @@
-/**
- * Ангел и Демон — Frontend Logic
- * Чистый Vanilla JS для Telegram Mini App
- */
+// Ангел и Демон — Frontend Logic (Telegram Mini App)
 
 // Инициализация Telegram WebApp
 const tg = window.Telegram?.WebApp;
@@ -27,6 +24,43 @@ function triggerHaptic(type = 'light') {
   } catch (e) {
     console.debug('Haptic feedback error:', e);
   }
+}
+
+// Всплывающие уведомления (Toast)
+let toastTimeout = null;
+function showToast(message, type = 'info', duration = 3000) {
+  let toastEl = document.getElementById('toast');
+  if (!toastEl) {
+    toastEl = document.createElement('div');
+    toastEl.id = 'toast';
+    toastEl.className = 'toast';
+    document.body.appendChild(toastEl);
+  }
+
+  if (toastTimeout) {
+    clearTimeout(toastTimeout);
+  }
+
+  let icon = '';
+  if (type === 'error') {
+    icon = '✖ ';
+    triggerHaptic('error');
+  } else if (type === 'warning') {
+    icon = '⚠️ ';
+    triggerHaptic('medium');
+  } else if (type === 'success') {
+    icon = '✔ ';
+    triggerHaptic('success');
+  } else {
+    triggerHaptic('light');
+  }
+
+  toastEl.textContent = `${icon}${message}`;
+  toastEl.className = `toast ${type} show`;
+
+  toastTimeout = setTimeout(() => {
+    toastEl.classList.remove('show');
+  }, duration);
 }
 
 // Базовые заголовки запросов к API
@@ -74,9 +108,7 @@ const el = {
   closeShopBtn: document.getElementById('close-shop-btn')
 };
 
-// -----------------------------------------------------------------------------
-// РАСЧЕТ И ОТРИСОВКА КАРМЫ
-// -----------------------------------------------------------------------------
+// Расчет и отрисовка кармы
 function updateKarmaBar(angel = state.karmaAngel, demon = state.karmaDemon) {
   state.karmaAngel = angel;
   state.karmaDemon = demon;
@@ -100,9 +132,7 @@ function updateSpheres(count) {
   el.spheresCount.textContent = count;
 }
 
-// -----------------------------------------------------------------------------
-// ОТРИСОВКА СКИНОВ И ИСТОРИИ
-// -----------------------------------------------------------------------------
+// Отрисовка скинов и истории
 function renderSkins() {
   const pills = el.skinPills.querySelectorAll('.skin-pill');
   pills.forEach((pill) => {
@@ -172,9 +202,7 @@ function renderHistory(historyItems = []) {
   });
 }
 
-// -----------------------------------------------------------------------------
-// ЗАГРУЗКА ПРОФИЛЯ ПРИ СТАРТЕ
-// -----------------------------------------------------------------------------
+// Загрузка профиля при старте
 async function loadProfile() {
   try {
     const res = await fetch('/api/me', {
@@ -201,9 +229,7 @@ async function loadProfile() {
   }
 }
 
-// -----------------------------------------------------------------------------
-// ВЫБОР СКИНА
-// -----------------------------------------------------------------------------
+// Выбор скина
 el.skinPills.addEventListener('click', (e) => {
   const pill = e.target.closest('.skin-pill');
   if (!pill) return;
@@ -220,23 +246,19 @@ el.skinPills.addEventListener('click', (e) => {
   renderSkins();
 });
 
-// -----------------------------------------------------------------------------
-// ОТПРАВКА ДИЛЕММЫ НА РАССУЖДЕНИЕ
-// -----------------------------------------------------------------------------
+// Отправка дилеммы на рассуждение
 el.submitBtn.addEventListener('click', async () => {
   const text = el.dilemmaInput.value.trim();
 
   if (text.length < 3) {
-    triggerHaptic('error');
-    alert('Опиши дилемму подробнее (минимум 3 символа).');
+    showToast('Опиши дилемму подробнее (минимум 3 символа)', 'warning');
     el.dilemmaInput.focus();
     return;
   }
 
   const useJudge = el.judgeToggle.checked;
   if (useJudge && state.judgeSpheres < 1) {
-    triggerHaptic('error');
-    alert('Недостаточно сфер Судьи! Пополни баланс в магазине.');
+    showToast('Недостаточно сфер Судьи! Пополни баланс в магазине', 'warning');
     openShopModal();
     return;
   }
@@ -290,6 +312,7 @@ el.submitBtn.addEventListener('click', async () => {
 
     triggerHaptic('success');
     el.resultsSection.classList.remove('hidden');
+    el.dilemmaInput.value = '';
 
     // Плавный скролл к результатам
     el.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -297,18 +320,15 @@ el.submitBtn.addEventListener('click', async () => {
     // Обновляем список истории
     loadProfile();
   } catch (err) {
-    triggerHaptic('error');
     console.error('Ошибка дилеммы:', err);
-    alert(err.message || 'Произошла непредвиденная ошибка при генерации.');
+    showToast(err.message || 'Произошла непредвиденная ошибка при генерации.', 'error');
   } finally {
     el.loader.classList.add('hidden');
     el.submitBtn.disabled = false;
   }
 });
 
-// -----------------------------------------------------------------------------
-// ВЫБОР СТОРОНЫ (ГОЛОСОВАНИЕ)
-// -----------------------------------------------------------------------------
+// Выбор стороны (голосование)
 async function handleChoice(side) {
   if (!state.currentDilemmaId) return;
 
@@ -343,17 +363,15 @@ async function handleChoice(side) {
     triggerHaptic('success');
     loadProfile();
   } catch (err) {
-    triggerHaptic('error');
     console.error('Ошибка фиксации выбора:', err);
+    showToast('Не удалось зафиксировать выбор', 'error');
   }
 }
 
 el.chooseAngelBtn.addEventListener('click', () => handleChoice('angel'));
 el.chooseDemonBtn.addEventListener('click', () => handleChoice('demon'));
 
-// -----------------------------------------------------------------------------
-// МАГАЗИН И МОДАЛЬНАЯ ШТОРКА
-// -----------------------------------------------------------------------------
+// Магазин и модальная шторка
 function openShopModal() {
   triggerHaptic('light');
   el.shopModal.classList.remove('hidden');
@@ -400,30 +418,19 @@ el.shopModal.querySelectorAll('.buy-btn').forEach((btn) => {
       if (tg?.openInvoice) {
         tg.openInvoice(data.invoice_link, (status) => {
           if (status === 'paid') {
-            triggerHaptic('success');
-            if (tg?.showAlert) {
-              tg.showAlert('Оплата прошла успешно! Баланс обновлен.');
-            }
+            showToast('Оплата прошла успешно! Баланс обновлен.', 'success');
             loadProfile();
             closeShopModal();
           } else if (status === 'failed') {
-            triggerHaptic('error');
-            if (tg?.showAlert) {
-              tg.showAlert('Оплата не была завершена.');
-            }
+            showToast('Оплата не была завершена.', 'warning');
           }
         });
       } else {
         window.open(data.invoice_link, '_blank');
       }
     } catch (err) {
-      triggerHaptic('error');
       console.error('Ошибка создания инвойса:', err);
-      if (tg?.showAlert) {
-        tg.showAlert(err.message || 'Ошибка при открытии счета');
-      } else {
-        alert(err.message || 'Ошибка при открытии счета');
-      }
+      showToast(err.message || 'Ошибка при открытии счета', 'error');
     } finally {
       btn.disabled = false;
     }
