@@ -1,4 +1,6 @@
+import asyncio
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,9 +9,15 @@ from fastapi.staticfiles import StaticFiles
 from app.api.endpoints import router as api_router
 from app.config import settings
 from app.database.db import init_db
-
-import asyncio
 from app.services.bot import bot, dp
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("angel_demon")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,15 +25,15 @@ async def lifespan(app: FastAPI):
     polling_task = None
     if bot:
         polling_task = asyncio.create_task(dp.start_polling(bot))
-        print("Бот и Бэк запущены")
+        logger.info("Бот и Бэк успешно запущены")
     else:
-        print("Бэк запущен (без бота)")
+        logger.info("Бэк запущен (без бота)")
     yield
     if polling_task:
         polling_task.cancel()
     if bot:
         await bot.session.close()
-    print("Бэк остановлен")
+    logger.info("Бэк остановлен")
 
 app = FastAPI(
     title="Ангел и Демон TMA",

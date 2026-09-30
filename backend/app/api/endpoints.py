@@ -1,3 +1,4 @@
+import logging
 import aiosqlite
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -9,6 +10,8 @@ from app.config import settings
 from app.services.bot import bot
 from app.services.llm import generate_duality, generate_response
 from app.services.prompts import JUDGE_SYSTEM, format_judge_input, get_skin_prompts
+
+logger = logging.getLogger("angel_demon.api")
 
 router = APIRouter(prefix="/api", tags=["API"])
 
@@ -45,12 +48,19 @@ async def create_dilemma(
         if not has_sphere:
             raise HTTPException(status_code=400, detail="Недостаточно сфер судьи! Пополните баланс в магазине.")
     angel_prompt, demon_prompt = get_skin_prompts(req.skin)
-    angel_answer, demon_answer, elapsed = await generate_duality(
-        angel_prompt, demon_prompt, req.text
-    )
-    if req.use_judge:
-        judge_input = format_judge_input(req.text, angel_answer, demon_answer)
-        judge_answer, _ = await generate_response(JUDGE_SYSTEM, judge_input)
+    try:
+        angel_answer, demon_answer, elapsed = await generate_duality(
+            angel_prompt, demon_prompt, req.text
+        )
+        if req.use_judge:
+            judge_input = format_judge_input(req.text, angel_answer, demon_answer)
+            judge_answer, _ = await generate_response(JUDGE_SYSTEM, judge_input)
+    except Exception as e:
+        logger.exception("Ошибка при генерации ответа сущностей: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail=str(e) or "Ошибка сервиса нейросети. Попробуйте позже.",
+        )
     dilemma_id = await save_dilemma(
         db, user_id, req.text, req.skin, angel_answer, demon_answer
     )
