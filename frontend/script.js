@@ -154,6 +154,22 @@ function renderSkins() {
       pill.classList.remove('active');
     }
   });
+
+  const shopBtns = el.shopModal?.querySelectorAll('.buy-btn');
+  if (shopBtns) {
+    shopBtns.forEach((btn) => {
+      const item = btn.dataset.item;
+      if (item === 'skin_gopnik' && state.unlockedSkins.includes('gopnik')) {
+        btn.textContent = '✔ Куплено';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      } else if (item === 'skin_office' && state.unlockedSkins.includes('office')) {
+        btn.textContent = '✔ Куплено';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      }
+    });
+  }
 }
 
 function renderHistory(historyItems = []) {

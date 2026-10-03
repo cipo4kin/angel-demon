@@ -30,14 +30,21 @@ def validate_telegram_data(init_data: str) -> dict:
 
     if not hmac.compare_digest(calculated_hash, received_hash):
         raise HTTPException(status_code=401, detail="Подпись Telegram не совпадает")
-    user_raw = parsed_data.get("user", "{}")
-    return json.loads(user_raw)
+    try:
+        return json.loads(user_raw)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Некорректные данные пользователя в initData")
 
 def get_current_user_id(
         x_telegram_init_data: Annotated[str | None, Header()] = None,
 ) -> int:
     if not x_telegram_init_data:
-        return 777000111
+        if settings.DEBUG:
+            return 777000111
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Доступ разрешён только через Telegram WebApp",
+        )
     user_info = validate_telegram_data(x_telegram_init_data)
     user_id = user_info.get("id")
     if not user_id:

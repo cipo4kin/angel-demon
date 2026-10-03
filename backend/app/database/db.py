@@ -15,6 +15,8 @@ async def init_db() -> None:
     settings.DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     async with aiosqlite.connect(settings.DB_PATH) as db:
+        await db.execute("PRAGMA journal_mode=WAL;")
+        await db.execute("PRAGMA synchronous=NORMAL;")
         await db.execute(
             """
 CREATE TABLE IF NOT EXISTS users (
@@ -40,6 +42,9 @@ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (user_id) REFERENCES users(telegram_id)
 );
 """
+        )
+        await db.execute(
+            "CREATE INDEX IF NOT EXISTS idx_dilemmas_user_id ON dilemmas(user_id);"
         )
         await db.commit()
 async def main():

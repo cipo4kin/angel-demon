@@ -8,6 +8,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    DEBUG: bool = False
     BOT_TOKEN: str = ""
     GROQ_API_KEY: str = ""
     GROQ_API_KEYS: str = ""

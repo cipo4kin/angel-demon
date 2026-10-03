@@ -42,12 +42,17 @@ async def create_dilemma(
     user_id: int = Depends(get_current_user_id),
     db: aiosqlite.Connection = Depends(get_db),
 ):
+    user = await get_or_create_user(db, user_id)
+    if req.use_judge and user["judge_spheres"] < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Недостаточно сфер судьи! Пополните баланс в магазине.",
+        )
+
+    skin = req.skin if req.skin in user["unlocked_skins"] else "classic"
+    angel_prompt, demon_prompt = get_skin_prompts(skin)
+
     judge_answer = None
-    if req.use_judge:
-        has_sphere = await spend_judge_sphere(db, user_id)
-        if not has_sphere:
-            raise HTTPException(status_code=400, detail="Недостаточно сфер судьи! Пополните баланс в магазине.")
-    angel_prompt, demon_prompt = get_skin_prompts(req.skin)
     try:
         angel_answer, demon_answer, elapsed = await generate_duality(
             angel_prompt, demon_prompt, req.text
@@ -61,10 +66,14 @@ async def create_dilemma(
             status_code=503,
             detail=str(e) or "Ошибка сервиса нейросети. Попробуйте позже.",
         )
+
+    if req.use_judge:
+        await spend_judge_sphere(db, user_id)
+        user["judge_spheres"] = max(0, user["judge_spheres"] - 1)
+
     dilemma_id = await save_dilemma(
-        db, user_id, req.text, req.skin, angel_answer, demon_answer
+        db, user_id, req.text, skin, angel_answer, demon_answer
     )
-    user = await get_or_create_user(db, user_id)
 
     return {
         "id": dilemma_id,
@@ -92,11 +101,21 @@ class InvoiceRequest(BaseModel):
 async def create_invoice(
     req: InvoiceRequest,
     user_id: int = Depends(get_current_user_id),
+    db: aiosqlite.Connection = Depends(get_db),
 ):
     if not bot:
         raise HTTPException(
             status_code=500, detail="Telegram бот не настроен"
         )
+
+    if req.item in ("skin_gopnik", "skin_office"):
+        skin_name = req.item.replace("skin_", "")
+        user = await get_or_create_user(db, user_id)
+        if skin_name in user["unlocked_skins"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Этот скин уже разблокирован в вашем профиле!",
+            )
 
     ITEMS_CONFIG = {
         "pack_spheres": {

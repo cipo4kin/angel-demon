@@ -44,29 +44,29 @@ async def choose_side(
     user_id: int,
     side: str,
 ) -> dict:
-    await db.execute(
-        "UPDATE dilemmas SET chosen_side = ? WHERE id = ? AND user_id = ?;",
+    cursor = await db.execute(
+        "UPDATE dilemmas SET chosen_side = ? WHERE id = ? AND user_id = ? AND chosen_side IS NULL;",
         (side, dilemma_id, user_id),
     )
-    if side == "angel":
-        await db.execute(
-            "UPDATE users SET karma_angel = karma_angel + 1 WHERE telegram_id = ?;",
-            (user_id,),
-
-        )
-    elif side == "demon":
-        await db.execute(
-            "UPDATE users SET karma_demon = karma_demon + 1 WHERE telegram_id = ?;",
-            (user_id,),
-        )
-    await db.commit()
+    if cursor.rowcount > 0:
+        if side == "angel":
+            await db.execute(
+                "UPDATE users SET karma_angel = karma_angel + 1 WHERE telegram_id = ?;",
+                (user_id,),
+            )
+        elif side == "demon":
+            await db.execute(
+                "UPDATE users SET karma_demon = karma_demon + 1 WHERE telegram_id = ?;",
+                (user_id,),
+            )
+        await db.commit()
 
     cursor = await db.execute(
         "SELECT karma_angel, karma_demon FROM users WHERE telegram_id = ?;",
         (user_id,),
     )
     row = await cursor.fetchone()
-    return dict(row)
+    return dict(row) if row else {"karma_angel": 0, "karma_demon": 0}
 async def get_user_history(
         db: aiosqlite.Connection,
         user_id: int,
@@ -104,6 +104,7 @@ async def add_judge_spheres(
         user_id: int,
         count: int,
 ) -> int:
+    await get_or_create_user(db, user_id)
     await db.execute(
         "UPDATE users SET judge_spheres = judge_spheres + ? WHERE telegram_id = ?;",
         (count, user_id,),
@@ -114,20 +115,15 @@ async def add_judge_spheres(
         "SELECT judge_spheres FROM users WHERE telegram_id = ?;",
         (user_id,),
     )
-    await db.commit()
     row = await cursor.fetchone()
-    return row["judge_spheres"]
+    return row["judge_spheres"] if row else count
 async def unlock_skin(
         db: aiosqlite.Connection,
         user_id: int,
         skin_name: str,
 ) -> list[str]:
-    cursor = await db.execute(
-        "SELECT unlocked_skins FROM users WHERE telegram_id = ?;",
-        (user_id,),
-    )
-    row = await cursor.fetchone()
-    skins = json.loads(row["unlocked_skins"]) if row else ["classic"]
+    user = await get_or_create_user(db, user_id)
+    skins = user["unlocked_skins"]
 
     if skin_name not in skins:
         skins.append(skin_name)
