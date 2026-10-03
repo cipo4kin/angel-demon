@@ -30,6 +30,8 @@ def validate_telegram_data(init_data: str) -> dict:
 
     if not hmac.compare_digest(calculated_hash, received_hash):
         raise HTTPException(status_code=401, detail="Подпись Telegram не совпадает")
+
+    user_raw = parsed_data.get("user", "{}")
     try:
         return json.loads(user_raw)
     except Exception:
