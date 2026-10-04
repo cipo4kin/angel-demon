@@ -51,6 +51,7 @@ async def process_successful_payment(message: Message):
         item, user_id_str = parts
         user_id = int(user_id_str)
         async with aiosqlite.connect(settings.DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
             if item == "pack_spheres":
                 await add_judge_spheres(db, user_id, 3)
             elif item in ("skin_gopnik", "skin_office"):

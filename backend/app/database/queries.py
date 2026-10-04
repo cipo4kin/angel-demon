@@ -2,6 +2,7 @@ import json
 import aiosqlite
 
 async def get_or_create_user(db: aiosqlite.Connection, telegram_id: int) -> dict:
+    db.row_factory = aiosqlite.Row
     cursor = await db.execute(
         "SELECT * FROM users WHERE telegram_id = ?;",
         (telegram_id,)
